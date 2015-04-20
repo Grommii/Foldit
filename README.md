@@ -3,6 +3,7 @@ Greetings!
 
 It is a script that contains many other scripts and allows you to run any of them. Just choose which one to run after the start.
 Also there is an Autobot script that allows you to predefine the run sequence of basic scripts with given parameters. So you can create your own Score gain algorithm.
+http://fold.it/portal/recipe/46192
 
 How it works:
 1. Each basic script have a code and some of them have a parameters. When you want to include a basic script to sequence, print code and print all the parameters with the underscore. After the each basic script print the dot.
