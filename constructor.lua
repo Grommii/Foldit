@@ -44,7 +44,7 @@ For example, if you want to use BlueFuze just include "BF." in the sequence. If 
 2. When sequence is completed, write it to text field and start the script.
 3. Script will be sequentially running your predefined scripts. When All scripts completed, it checks how much score is gained. If its exceed the limit (limit can be set to 0), then the sequence runs for one more time. If not, then the Iterations ends and the new Iteration starts (from the structure when the script was started).
 
-The example of sequence, that I use:
+The example of sequence, that I used:
 Default:        "CL.FR.BT_15_87_97.BT_15_103_113.RW_2_1_10.QU_15.BF.RW_1_1_10.LW_12_2.SR."
 For Mutable:    "CL.FR.BT_10_87_97.MT_3_20.BT_10_103_113.NM.RW_2_1_10.MT_3_20.QU_15.BF.RW_1_1_10.LW_12_2.SR."
 For Multistart: "WS.BT_2_87_97.FR.CL.BT_10_87_97.BT_10_103_113.RW_2_1_10.QU_15.BF.RW_1_1_10.LW_12_2.SR."
@@ -172,11 +172,11 @@ Script example: "MI_3_4.".
 -- Predefined Sequences
 
 -- Common
-SequenceStrPredefined1 = "CL.FR.BT_15_87_97.BT_15_103_113.RW_2_1_10.QU_15.BF.RW_1_1_10.LW_12_2.SR.MI_3_10.ST_2." 
+SequenceStrPredefined1 = "CL.FR.BT_15_87_97.BT_15_103_113.RW_2_1_10.QU_15.BF.RW_1_1_10.LW_12_2.SR.MI_3_10.ST_1." 
 -- For Mutable
-SequenceStrPredefined2 = "CL.FR.BT_10_87_97.MT_3_20.BT_10_103_113.NM.RW_2_1_10.MT_3_20.QU_15.BF.RW_1_1_10.LW_12_2.SR.MI_3_10.ST_2."
+SequenceStrPredefined2 = "CL.FR.BT_10_87_97.MT_3_20.BT_10_103_113.NM.RW_2_1_10.MT_3_20.QU_15.BF.RW_1_1_10.LW_12_2.SR.MI_3_10.ST_1."
 -- For Multistart
-SequenceStrPredefined3 = "WS.BT_2_87_97.FR.CL.BT_10_87_97.BT_10_103_113.RW_2_1_10.QU_15.BF.RW_1_1_10.LW_12_2.SR.MI_3_10.ST_2."
+SequenceStrPredefined3 = "WS.BT_2_87_97.FR.CL.BT_10_87_97.BT_10_103_113.RW_2_1_10.QU_15.BF.RW_1_1_10.LW_12_2.SR.MI_3_10.ST_1."
 -- For Endgame Death
 SequenceStrPredefined4 = "CL.BF.MI_4_200.LW_15_2.LW_14_2.LW_13_2.LW_12_2.LW_11_2.LW_10_2.SF.CL.BF.MI_3_200.LW_9_2.LW_8_2.LW_7_2.LW_6_2.LW_5_2.SF.CL.BF.MI_2_200.LW_4_2.LW_3_2.LW_2_2.LW_1_2.QU_12."
 
@@ -242,7 +242,7 @@ function freestyle_starter()
   end
   
   for i=1,10 do
-    starter_rebuild(20)
+    starter_rebuild(10)
     print("Rebuild: " .. i .. ", score: " .. current.GetEnergyScore() .. ",gain: " .. current.GetEnergyScore() - startScore)
     recentbest.Restore()
   end
@@ -1434,8 +1434,7 @@ if (DialogResult == 1) then
     while Iteration < 99 do
       print("Start of Iteration: "..Iteration)
       if (ScriptAsk.IsReset.value) 
-        then 
-          save.Quicksave(Iteration)
+        then
           puzzle.StartOver()
 		  startScore = current.GetEnergyScore()
         else save.Quickload(99)
@@ -1543,6 +1542,7 @@ if (DialogResult == 1) then
       end
       
       print("End of Iteration: "..Iteration)
+	  save.Quicksave(Iteration)
       Iteration = Iteration + 1
       
     end
