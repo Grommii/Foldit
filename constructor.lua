@@ -167,6 +167,7 @@ Script Parameters:
 Script Description: Idealizes the worst scoring segments (idealize score) of given length.
 Script example: "MI_3_4.".
 
+
 ]]--
 
 -- Predefined Sequences
