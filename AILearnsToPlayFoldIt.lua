@@ -8,14 +8,17 @@ end
 
 function initializeActions()
     performAction = {}
+    actionDescription = {}
 
     performAction[0] = function()
         structure.WiggleAll(3)
     end
+    actionDescription[0] = "Wiggle(3)"
 
     performAction[1] = function()
         structure.MutateSidechainsAll(1)
     end
+    actionDescription[1] = "Mutate(1)"
 
     performAction[2] = function()
         local startSegmentNumber = math.random(1, structure.GetCount() - 9)
@@ -24,14 +27,17 @@ function initializeActions()
         band.SetStrength(1, 10)
         band.SetGoalLength(1, structure.GetDistance(startSegmentNumber, endSegmentNumber) * 0.9)
     end
+    actionDescription[2] = "Add random band"
 
     performAction[3] = function()
         band.DeleteAll()
     end
+    actionDescription[3] = "Delete all bands"
 
     performAction[4] = function()
         recentbest.Restore()
     end
+    actionDescription[4] = "Restore recent best"
 
     performAction[5] = function()
         local startSegmentNumber = math.random(1,structure.GetCount() - 3)
@@ -40,18 +46,22 @@ function initializeActions()
         structure.RebuildSelected(2)
         selection.DeselectAll()
     end
+    actionDescription[5] = "Rebuild random segment"
 
     performAction[6] = function()
         behavior.SetClashImportance(1)
     end
+    actionDescription[6] = "Set clash importance to 1"
 
     performAction[7] = function()
         behavior.SetClashImportance(0.5)
     end
+    actionDescription[7] = "Set clash importance to 0.5"
 
     performAction[8] = function()
         behavior.SetClashImportance(0.02)
     end
+    actionDescription[8] = "Set clash importance to 0.02"
 
     performAction[9] = function()
         local startSegmentNumber = math.random(1, structure.GetCount() - 3)
@@ -60,6 +70,7 @@ function initializeActions()
         structure.IdealizeSelected()
         selection.DeselectAll()
     end
+    actionDescription[9] = "Idealize random segment"
 
     performAction[10] = function()
         local lengthOfSegment = math.random(1, 3)
@@ -89,14 +100,26 @@ function initializeActions()
         structure.RebuildSelected(2)
         selection.DeselectAll()
     end
+    actionDescription[10] = "Rebuild worst segment"
 end
 
 function addHashToAlgorithm(algorithm)
     algorithm.Hash = ""
-    local shift = 0
     for i = 1, #algorithm do
-        if algorithm[i] >= 10 then shift = 7 else shift = 0 end
-        algorithm.Hash = algorithm.Hash .. string.char(HashStartCharacterCode + algorithm[i] + shift)
+        if algorithm[i] >= 10 then
+            algorithm.Hash = algorithm.Hash .. string.char(HashStartCharacterCode + algorithm[i] + HashShift)
+        else
+            algorithm.Hash = algorithm.Hash .. string.char(HashStartCharacterCode + algorithm[i])
+        end
+    end
+end
+
+function addAlgorithmBasedOnHash(algorithm)
+    for i = 1, string.len(algorithm.Hash) do
+        algorithm[i] = string.byte(algorithm.Hash, i) - HashStartCharacterCode
+        if algorithm[i] > 10 then
+            algorithm[i] = algorithm[i] - HashShift
+        end
     end
 end
 
@@ -268,6 +291,16 @@ function printMainInformation()
     print("ResetWorldGeneration: " .. ResetWorldGeneration)
     print("MutateRate: " .. MutateRate)
     print("StartScore: " .. current.GetEnergyScore())
+    print("----------------------------------")
+    print("Actions used:")
+    for i = 0, #performAction do
+        if i >= 10 then
+            print(string.char(HashStartCharacterCode + i + HashShift) .. ": " .. actionDescription[i])
+        else
+            print(string.char(HashStartCharacterCode + i) .. ": " .. actionDescription[i])
+        end
+    end
+    print("----------------------------------")
 end
 
 function showMainDialog()
@@ -309,17 +342,38 @@ function showMainDialog()
     return false
 end
 
+function cleanAlgorithmHash(algorithmHash)
+    local cleanedAlgorithmHash = ""
+    for i = 1, string.len(algorithmHash) do
+        if string.byte(algorithmHash, i) >= HashStartCharacterCode and string.byte(algorithmHash, i) <= HashStartCharacterCode + 10 then
+            cleanedAlgorithmHash = cleanedAlgorithmHash .. string.sub(algorithmHash, i, i)
+        end
+        if string.byte(algorithmHash, i) >= HashStartCharacterCode + 17 and string.byte(algorithmHash, i) <= HashStartCharacterCode + 17 then
+            cleanedAlgorithmHash = cleanedAlgorithmHash .. string.sub(algorithmHash, i, i)
+        end
+    end
+    return cleanedAlgorithmHash
+end
+
 function showMoreDialog()
     local moreDialog = dialog.CreateDialog("Additional options.")
     moreDialog.Label = dialog.AddLabel("Include pre-defined algorithms:")
     moreDialog.AddAlgorithm1 = dialog.AddCheckbox("51042031048016049104", true)
     moreDialog.AddAlgorithm2 = dialog.AddCheckbox("91042031047016045104", true)
+    moreDialog.LabelCustomAlgorithm = dialog.AddLabel("Include custom algorithm:")
+    moreDialog.CustomHash = dialog.AddTextbox("", "")
     moreDialog.OK = dialog.AddButton("Return", 1)
 
     local moreDialogResult = dialog.Show(moreDialog)
     if (moreDialogResult == 1) then
         InitialAlgorithm[1] = moreDialog.AddAlgorithm1.value
         InitialAlgorithm[2] = moreDialog.AddAlgorithm2.value
+        if string.len(moreDialog.CustomHash.value) > 0 then
+            CustomAlgorithmHash = cleanAlgorithmHash(moreDialog.CustomHash.value)
+            if string.len(CustomAlgorithmHash) > 0 then
+                InitialAlgorithm[3] = true
+            end
+        end
         showMainDialog()
     end
 end
@@ -338,7 +392,7 @@ function runMainProgram()
 
     -- Add own algorithms
 
-    if InitialAlgorithm[#population + 1] then
+    if InitialAlgorithm[1] then
         algorithm = {5,1,0,4,2,0,3,1,0,4,8,0,1,6,0,4,9,1,0,4}
         initializeAlgorithm(algorithm)
         optimizeAlgorithm(algorithm)
@@ -347,8 +401,19 @@ function runMainProgram()
         table.insert(population, algorithm)
     end
 
-    if InitialAlgorithm[#population + 1] then
+    if InitialAlgorithm[2] then
         algorithm = {9,1,0,4,2,0,3,1,0,4,7,0,1,6,0,4,5,1,0,4}
+        initializeAlgorithm(algorithm)
+        optimizeAlgorithm(algorithm)
+        algorithm.CurrentStateString = getCurrentStateString(0, "Initial", #population + 1) .. algorithm.Hash .. "."
+        testAlgorithm(algorithm)
+        table.insert(population, algorithm)
+    end
+
+    if InitialAlgorithm[3] then
+        algorithm = {}
+        algorithm.Hash = CustomAlgorithmHash
+        addAlgorithmBasedOnHash(algorithm)
         initializeAlgorithm(algorithm)
         optimizeAlgorithm(algorithm)
         algorithm.CurrentStateString = getCurrentStateString(0, "Initial", #population + 1) .. algorithm.Hash .. "."
@@ -450,7 +515,8 @@ NumberOfActions = 11
 IterationScoreThreshold = 1
 ResetWorldGeneration = 10
 MutateRate = 0.2
-InitialAlgorithm = {true,true}
+InitialAlgorithm = {true, true, false}
+CustomAlgorithmHash = ""
 
 PopulationSize = 5
 MutationSize = 5
@@ -459,10 +525,10 @@ CrossSize = 5
 
 MaxGenerationSize = 1000
 HashStartCharacterCode = 48
+HashShift = 7
 
 save.Quicksave(1)
 recentbest.Save()
---startScore = current.GetEnergyScore()
 bestScore = current.GetEnergyScore()
 startTime = os.time()
 math.randomseed(startTime)
